@@ -7,6 +7,11 @@ variable "location" {
   default = "East US"
 }
 
+variable "resource_group_name" {
+  description = "An associated resource group name"
+  default = "terraform-compute"
+}
+
 variable "windows_dns_prefix" {
   description = "DNS prefix to add to to public IP address for Windows VM"
 }
@@ -31,7 +36,7 @@ module "network" {
   source              = "Azure/network/azurerm"
   version             = "1.1.1"
   location            = "${var.location}"
-  resource_group_name = "terraform-compute"
+  resource_group_name = "${var.resource_group_name}"
   allow_ssh_traffic   = true
 }
 
