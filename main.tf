@@ -9,7 +9,6 @@ variable "location" {
 
 variable "resource_group_name" {
   description = "An associated resource group name"
-  default = "terraform-compute"
 }
 
 variable "windows_dns_prefix" {
