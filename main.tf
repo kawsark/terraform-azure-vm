@@ -7,6 +7,11 @@ variable "location" {
   default = "East US"
 }
 
+variable "environment" {
+  description = "The environment for this deployment"
+  default = "dev"
+}
+
 variable "resource_group_name" {
   description = "An associated resource group name"
 }
@@ -40,6 +45,49 @@ module "network" {
   allow_ssh_traffic   = true
 }
 
-output "windows_vm_public_name"{
-  value = "${module.windowsserver.public_ip_dns_name}"
+output "lb_fqdn" {
+  value = "${data.azurerm_public_ip.windowsserverip.fqdn}"
+}
+
+data "azurerm_public_ip" "windowsserverip" {
+  resource_group_name = "${var.resource_group_name}"
+  name = "${azurerm_public_ip.windowsserverip.name}"
+}
+
+resource "azurerm_public_ip" "windowsserverip" {
+  resource_group_name          = "${var.resource_group_name}"
+  name                         = "${format("windowsserverip-%s", var.environment)}"
+  location                     = "${var.location}"
+  public_ip_address_allocation = "dynamic"
+  domain_name_label            = "${var.windows_dns_prefix}"
+ }
+
+resource "azurerm_lb" "windowsserver" {
+  resource_group_name = "${var.resource_group_name}"
+  name                = "${format("windowsserver-%s", var.environment)}"
+  location            = "${var.location}"
+
+  frontend_ip_configuration {
+      name                 = "LoadBalancerFrontEnd"
+      public_ip_address_id = "${azurerm_public_ip.windowsserverip.id}"
+  }
+}
+
+resource "azurerm_lb_backend_address_pool" "backend_pool" {
+  resource_group_name = "${var.resource_group_name}"
+  loadbalancer_id     = "${azurerm_lb.windowsserver.id}"
+  name                = "${format("BackendPool1-%s", var.environment)}"
+}
+
+resource "azurerm_lb_rule" "lb_rule" {
+    resource_group_name            = "${var.resource_group_name}"
+    loadbalancer_id                = "${azurerm_lb.windowsserver.id}"
+    name                           = "LBRule"
+    protocol                       = "tcp"
+    frontend_port                  = 80
+    backend_port                   = 80
+    frontend_ip_configuration_name = "LoadBalancerFrontEnd"
+    enable_floating_ip             = false
+    backend_address_pool_id        = "${azurerm_lb_backend_address_pool.backend_pool.id}"
+    idle_timeout_in_minutes        = 5
 }
