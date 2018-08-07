@@ -25,6 +25,11 @@ variable "admin_password" {
   default = "pTFE1234!"
 }
 
+resource "azurerm_resource_group" "main" {
+  name     = "${var.resource_group_name}"
+  location = "${var.location}"
+}
+
 module "windowsserver" {
   source              = "Azure/compute/azurerm"
   version             = "1.1.5"
