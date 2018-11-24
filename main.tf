@@ -2,6 +2,10 @@ terraform {
   required_version = ">= 0.11.1"
 }
 
+variable "resource_group_name" {
+  description = "An associated resource group name"
+}
+
 variable "location" {
   description = "Azure location in which to create resources"
   default = "East US"
@@ -20,19 +24,19 @@ module "windowsserver" {
   source              = "Azure/compute/azurerm"
   version             = "1.1.5"
   location            = "${var.location}"
-  resource_group_name = "${var.windows_dns_prefix}-rc"
   vm_hostname         = "pwc-ptfe"
   admin_password      = "${var.admin_password}"
   vm_os_simple        = "WindowsServer"
   public_ip_dns       = ["${var.windows_dns_prefix}"]
   vnet_subnet_id      = "${module.network.vnet_subnets[0]}"
+  resource_group_name = "${var.resource_group_name}"
 }
 
 module "network" {
   source              = "Azure/network/azurerm"
   version             = "1.1.1"
   location            = "${var.location}"
-  resource_group_name = "${var.windows_dns_prefix}-rc"
+  resource_group_name = "${var.resource_group_name}"
   allow_ssh_traffic   = true
 }
 
